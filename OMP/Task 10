@@ -1,0 +1,47 @@
+#include <iostream>
+#include <omp.h>
+#include <random>
+
+int main() {
+    const int rows = 6;
+    const int columns = 8;
+    int d[rows][columns];
+
+    // Инициализация генератора случайных чисел
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(1, 100);
+
+    // Инициализация двумерного массива случайными значениями
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < columns; ++j) {
+            d[i][j] = dis(gen);
+        }
+    }
+
+    int minVal = d[0][0];
+    int maxVal = d[0][0];
+
+    // Использование директивы omp parallel for и omp critical для нахождения минимального и максимального значения
+    #pragma omp parallel for
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < columns; ++j) {
+            #pragma omp critical
+            {
+                if (d[i][j] < minVal) {
+                    minVal = d[i][j];
+                }
+
+                if (d[i][j] > maxVal) {
+                    maxVal = d[i][j];
+                }
+            }
+        }
+    }
+
+    // Вывод результатов
+    std::cout << "Минимальное значение: " << minVal << std::endl;
+    std::cout << "Максимальное значение: " << maxVal << std::endl;
+
+    return 0;
+}
