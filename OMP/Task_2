@@ -1,0 +1,33 @@
+#pragma omp parallel if():
+
+#include <iostream>
+#include <omp.h>
+
+int main() {
+    int thread_count1 = 3;
+    int thread_count2 = 2;
+    
+    #pragma omp parallel if(thread_count1 > 2)
+    {
+        int thread_count = omp_get_num_threads();
+        int thread_num = omp_get_thread_num();
+        
+        #pragma omp if(thread_count1 > 2)
+        {
+            std::cout << "Parallel region 1: Thread count = " << thread_count << ", Thread num = " << thread_num << std::endl;
+        }
+    }
+    
+    #pragma omp parallel if(thread_count2 > 2)
+    {
+        int thread_count = omp_get_num_threads();
+        int thread_num = omp_get_thread_num();
+        
+        #pragma omp if(thread_count2 > 2)
+        {
+            std::cout << "Parallel region 2: Thread count = " << thread_count << ", Thread num = " << thread_num << std::endl;
+        }
+    }
+    
+    return 0;
+}
