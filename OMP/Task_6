@@ -1,0 +1,31 @@
+#include <iostream>
+#include <omp.h>
+
+int main() {
+    int a[100];
+    int sum = 0;
+    int avg_with_reduction = 0;
+    int avg_without_reduction = 0;
+
+    for (int i = 0; i < 100; i++) {
+        a[i] = i + 1;
+    }
+
+    #pragma omp parallel for reduction(+:sum)
+    for (int i = 0; i < 100; i++) {
+        sum += a[i];
+    }
+    avg_with_reduction = sum / 100;
+    sum = 0;
+
+    #pragma omp parallel for
+    for (int i = 0; i < 100; i++) {
+        sum += a[i];
+    }
+    avg_without_reduction = sum / 100;
+
+    std::cout << "Average (with reduction): " << avg_with_reduction << std::endl;
+    std::cout << "Average (without reduction): " << avg_without_reduction << std::endl;
+
+    return 0;
+}
