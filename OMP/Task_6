@@ -22,9 +22,9 @@ int main() {
         sum += a[i];
     }
     avg_with_reduction = sum / 100;
-    sum = 0;
+    // sum = 0;
 
-    #pragma omp parallel for
+    #pragma omp parallel for firstprivate(sum)
     for (int i = 0; i < 100; i++) {
         sum += a[i];
     }
