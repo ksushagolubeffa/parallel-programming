@@ -3,29 +3,28 @@
 #include <random>
 
 int main() {
-    int array_length = 100;
+
     int num_threads = 4;
     int max_value = 0;
+
     omp_lock_t lock;
     omp_init_lock(&lock);
 
-    // Заполнение массива случайными значениями
     std::random_device rd;
     std::mt19937 generator(rd());
     std::uniform_int_distribution<int> distribution(0, 100);
 
-    int* array = new int[array_length];
-    for (int i = 0; i < array_length; ++i) {
+    int array[100];
+    for (int i = 0; i < 100; ++i) {
         array[i] = distribution(generator);
     }
 
-    // Поиск максимального значения элементов кратных 7
     #pragma omp parallel num_threads(num_threads)
     {
         int local_max = 0;
 
         #pragma omp for
-        for (int i = 0; i < array_length; ++i) {
+        for (int i = 0; i < 100; ++i) {
             if (array[i] % 7 == 0) {
                 if (array[i] > local_max) {
                     local_max = array[i];
@@ -33,7 +32,6 @@ int main() {
             }
         }
 
-        // Синхронизация числовых значений максимума
         #pragma omp critical
         {
             if (local_max > max_value) {
@@ -43,7 +41,6 @@ int main() {
     }
 
     omp_destroy_lock(&lock);
-    delete[] array;
 
     std::cout << "Максимальное значение элементов массива кратных 7: " << max_value << std::endl;
 
