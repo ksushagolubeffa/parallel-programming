@@ -1,0 +1,44 @@
+#include<mpi.h>
+#include<iostream>
+#include <cstdlib>
+
+int main(int argc, char** argv)
+{
+
+    srand((unsigned int)time(NULL));
+    int size, rank = 4;
+    int N = 20;
+    int x[N];
+    int result;
+
+    MPI_Init(&argc, &argv);
+
+
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    int elements_per_proc = N / size;
+    int *subarr = new int[elements_per_proc];
+    int localmax;
+    if (rank == 0) {
+        for (int i = 0; i < N; i++) {
+            x[i] = rand() % 2000;
+            printf("%d ", x[i]);
+        }
+    }
+
+    MPI_Scatter(x, elements_per_proc, MPI_INT, subarr, elements_per_proc, MPI_INT, 0, MPI_COMM_WORLD);
+
+    localmax = 0;
+    for (int i = 0; i < elements_per_proc; i++)
+        if (subarr[i] > localmax) localmax = subarr[i];
+
+    MPI_Reduce(&localmax, &result, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
+
+    if (rank == 0)
+        std::cout << "Max = " << result << std::endl;
+        // printf("\nmax = %d \n", result);
+
+    MPI_Finalize();
+    return 0;
+}
