@@ -1,0 +1,68 @@
+#include<mpi.h>
+#include<iostream>
+#include <cstdlib>
+
+int main(int argc, char** argv){
+    int n = 40;
+        int rank, comm_size;
+
+        MPI_Init(NULL, NULL);
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+
+        int local_size = n/comm_size;
+        int* a = new int[n];
+        int* a_local = new int[local_size];
+        int* new_a = new int[n];
+
+        if (rank == 0){
+            printf("Local size = %d\n", local_size);
+            srand(time(NULL));
+            printf("Array a: ");
+            for (int i = 0; i < n; ++i) {
+                a[i] = rand() % 10;
+                printf("%d ", a[i]);
+            }
+            printf("\n");
+            for (int i = 0; i < comm_size; ++i) {
+                int* send = new int[local_size];
+                for (int j = 0; j < local_size; ++j) {
+                    send[j] = a[i*local_size + j];
+                }
+                if (i == 0){
+                    a_local = send;
+                } else {
+                    MPI_Send(send, local_size, MPI_INT, i, i, MPI_COMM_WORLD);
+                }
+            }
+        }
+        if (rank != 0){
+            MPI_Recv(a_local, local_size, MPI_INT, 0, rank, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+        }
+        printf("Local #%d array: ", rank);
+        for (int i = 0; i < local_size; ++i) {
+            printf("%d ", a_local[i]);
+        }
+        printf("\n");
+
+        if (rank != 0){
+            MPI_Send(a_local, local_size, MPI_INT, 0, rank, MPI_COMM_WORLD);
+        }
+        MPI_Barrier(MPI_COMM_WORLD);
+        if (rank == 0){
+            for (int i = 0; i < comm_size; ++i) {
+                if (i != 0){
+                    MPI_Recv(a_local, local_size, MPI_INT, i, i, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+                }
+                for (int j = 0; j < local_size; ++j) {
+                    new_a[i*local_size + j] = a_local[j];
+                }
+            }
+            printf("Array new_a: ");
+            for (int i = 0; i < n; ++i) {
+                printf("%d ", new_a[i]);
+            }
+        }
+        MPI_Finalize();
+        return 0;
+    }
