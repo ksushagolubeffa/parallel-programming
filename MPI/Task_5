@@ -1,0 +1,51 @@
+#include<mpi.h>
+#include<iostream>
+#include <cstdlib>
+
+int main(int argc, char** argv){
+    int rank, comm_size;
+        int n = 10000;
+
+        MPI_Init(NULL, NULL);
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+
+        int local_size = n / comm_size;
+        int *a = new int[n];
+        int *b = new int[n];
+        long sumLocal = 0;
+        long sum = 0;
+
+        int *aLocal = new int[local_size];
+        int *bLocal = new int[local_size];
+        int *sendcounts = new int[comm_size];
+        int *displs = new int[comm_size];
+
+        if (rank == 0) {
+            printf("Local size = %d\n", local_size);
+            srand(time(NULL));
+            for (int i = 0; i < n; ++i) {
+                a[i] = rand() % 10;
+                b[i] = rand() % 10;
+            }
+            for (int i = 0; i < comm_size; ++i) {
+                sendcounts[i] = local_size;
+                displs[i] = i * local_size;
+            }
+        }
+
+        MPI_Scatterv(a, sendcounts, displs, MPI_INT, aLocal, local_size, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Scatterv(b, sendcounts, displs, MPI_INT, bLocal, local_size, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Barrier(MPI_COMM_WORLD);
+        for (int i = 0; i < local_size; ++i) {
+            sumLocal += (long) (aLocal[i] * bLocal[i]);
+        }
+        printf("Local sumLocal in #%d = %ld\n", rank, sumLocal);
+        MPI_Reduce(&sumLocal, &sum, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD);
+        if (rank == 0) {
+            printf("Sum = %ld\n", sum);
+        }
+        MPI_Finalize();
+        return 0;
+    }
+
